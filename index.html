@@ -12,7 +12,6 @@
       background-color: #f4f4f9;
       display: flex;
       justify-content: center;
-      sroll-bar: none;
       align-items: center;
       height: 100vh;
     }
@@ -23,7 +22,6 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       text-align: center;
       width: 300px;
-      display: fixed;
     }
     h1 {
       font-size: 20px;
@@ -53,16 +51,6 @@
       appearance: none;
       background: none;
       cursor: pointer;
-    }
-    .custom-select::after {
-      content: '▼';
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      pointer-events: none;
-      color: #333;
-      font-size: 12px;
     }
     button {
       width: 100%;
@@ -100,38 +88,55 @@
   </div>
 
   <script>
-    // Obtener tasas de cambio de una API
+    // Obtener las tasas de cambio de la API de DolarApi
+    // Obtener las tasas de cambio de la API de DolarApi
     async function getExchangeRates() {
-      const url = "https://open.er-api.com/v6/latest/USD"; // Cambiar según tu API preferida
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        if (data.result === "success") {
-          return data.rates;
-        } else {
-          alert("No se pudieron obtener las tasas de cambio.");
-          return null;
-        }
-      } catch (error) {
-        alert("Error al conectar con la API.");
-        console.error(error);
-        return null;
-      }
-    }
+  const urlOficial = "https://dolarapi.com/v1/dolares/oficial";
+  const urlTarjeta = "https://dolarapi.com/v1/dolares/tarjeta";
+  const urlUY = "https://uy.dolarapi.com/v1/cotizaciones"; // URL para el peso uruguayo
 
+  try {
+    const oficialResponse = await fetch(urlOficial);
+    const tarjetaResponse = await fetch(urlTarjeta);
+    const uyResponse = await fetch(urlUY);
+
+    const oficialData = await oficialResponse.json();
+    const tarjetaData = await tarjetaResponse.json();
+    const uyData = await uyResponse.json();
+
+    if (oficialData && tarjetaData && uyData) {
+      return {
+        ARS: oficialData.venta, // Dólar venta oficial
+        UYU: uyData[0].compra, // Cotización del peso uruguayo
+        dolarTarjeta: tarjetaData.venta // Dólar tarjeta
+      };
+    } else {
+      alert("No se pudieron obtener las tasas de cambio.");
+      return null;
+    }
+  } catch (error) {
+    alert("Error al conectar con la API.");
+    console.error(error);
+    return null;
+  }
+}
+  
     // Función principal para manejar la conversión
     async function convertCurrency() {
       const amount = parseFloat(document.getElementById("amount").value);
       const currency = document.getElementById("currency").value;
-
+  
       if (isNaN(amount) || amount <= 0) {
         alert("Por favor, ingresa un monto válido.");
         return;
       }
-
+  
       const rates = await getExchangeRates();
       if (!rates) return;
-
+  
+      const dolarMinorista = rates.ARS; // Dólar oficial
+      const dolarTarjeta = rates.dolarTarjeta; // Dólar tarjeta
+  
       let resultText = "";
       if (currency === "UYU") {
         const ars = (amount * rates.ARS) / rates.UYU;
@@ -144,14 +149,18 @@
       } else if (currency === "USD") {
         const uyu = amount * rates.UYU;
         const ars = amount * rates.ARS;
-        resultText = `${amount} USD = ${uyu.toFixed(2)} UYU, ${ars.toFixed(2)} ARS`;
+        const tarjeta = dolarTarjeta * amount;
+        resultText = `${amount} USD = ${uyu.toFixed(2)} UYU, ${ars.toFixed(2)} ARS, ${tarjeta.toFixed(2)} ARS (Dólar Tarjeta)`;
       }
-
+  
       document.getElementById("result").innerText = resultText;
     }
-
+  
     // Agregar evento al botón
     document.getElementById("convert").addEventListener("click", convertCurrency);
   </script>
+  
+</body>
+</html>
 </body>
 </html>
