@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Calculadora de Monedas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 300px;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    select, input {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #28a745;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .result {
+      margin-top: 15px;
+      font-size: 16px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Calculadora de Monedas</h1>
+    <input type="number" id="amount" placeholder="Ingresa el monto" />
+    <select id="currency">
+      <option value="UYU">Peso Uruguayo (UYU)</option>
+      <option value="ARS">Peso Argentino (ARS)</option>
+      <option value="USD">Dólar (USD)</option>
+    </select>
+    <button id="convert">Convertir</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    // Obtener tasas de cambio de una API
+    async function getExchangeRates() {
+      const url = "https://open.er-api.com/v6/latest/USD"; // Cambiar según tu API preferida
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.result === "success") {
+          return data.rates;
+        } else {
+          alert("No se pudieron obtener las tasas de cambio.");
+          return null;
+        }
+      } catch (error) {
+        alert("Error al conectar con la API.");
+        console.error(error);
+        return null;
+      }
+    }
+
+    // Función principal para manejar la conversión
+    async function convertCurrency() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const currency = document.getElementById("currency").value;
+
+      if (isNaN(amount) || amount <= 0) {
+        alert("Por favor, ingresa un monto válido.");
+        return;
+      }
+
+      const rates = await getExchangeRates();
+      if (!rates) return;
+
+      let resultText = "";
+      if (currency === "UYU") {
+        const ars = (amount * rates.ARS) / rates.UYU;
+        const usd = amount / rates.UYU;
+        resultText = `${amount} UYU = ${ars.toFixed(2)} ARS, ${usd.toFixed(2)} USD`;
+      } else if (currency === "ARS") {
+        const uyu = (amount * rates.UYU) / rates.ARS;
+        const usd = amount / rates.ARS;
+        resultText = `${amount} ARS = ${uyu.toFixed(2)} UYU, ${usd.toFixed(2)} USD`;
+      } else if (currency === "USD") {
+        const uyu = amount * rates.UYU;
+        const ars = amount * rates.ARS;
+        resultText = `${amount} USD = ${uyu.toFixed(2)} UYU, ${ars.toFixed(2)} ARS`;
+      }
+
+      document.getElementById("result").innerText = resultText;
+    }
+
+    // Agregar evento al botón
+    document.getElementById("convert").addEventListener("click", convertCurrency);
+  </script>
+</body>
+</html>
