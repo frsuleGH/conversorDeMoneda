@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -69,6 +69,18 @@
       margin-top: 15px;
       font-size: 16px;
       color: #333;
+      display: grid;
+      grid-template-columns: 1fr;  /* 1 column */
+      gap: 10px;
+      padding: 10px 0;
+    }
+    .result-item {
+      background-color: #f1f1f1;
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+      text-align: center;
+      color: #333;
     }
   </style>
 </head>
@@ -88,79 +100,79 @@
   </div>
 
   <script>
-    // Obtener las tasas de cambio de la API de DolarApi
-    // Obtener las tasas de cambio de la API de DolarApi
     async function getExchangeRates() {
-  const urlOficial = "https://dolarapi.com/v1/dolares/oficial";
-  const urlTarjeta = "https://dolarapi.com/v1/dolares/tarjeta";
-  const urlUY = "https://uy.dolarapi.com/v1/cotizaciones"; // URL para el peso uruguayo
+      const urlOficial = "https://dolarapi.com/v1/dolares/oficial";
+      const urlTarjeta = "https://dolarapi.com/v1/dolares/tarjeta";
+      const urlUY = "https://uy.dolarapi.com/v1/cotizaciones"; 
 
-  try {
-    const oficialResponse = await fetch(urlOficial);
-    const tarjetaResponse = await fetch(urlTarjeta);
-    const uyResponse = await fetch(urlUY);
+      try {
+        const oficialResponse = await fetch(urlOficial);
+        const tarjetaResponse = await fetch(urlTarjeta);
+        const uyResponse = await fetch(urlUY);
 
-    const oficialData = await oficialResponse.json();
-    const tarjetaData = await tarjetaResponse.json();
-    const uyData = await uyResponse.json();
+        const oficialData = await oficialResponse.json();
+        const tarjetaData = await tarjetaResponse.json();
+        const uyData = await uyResponse.json();
 
-    if (oficialData && tarjetaData && uyData) {
-      return {
-        ARS: oficialData.venta, // Dólar venta oficial
-        UYU: uyData[0].compra, // Cotización del peso uruguayo
-        dolarTarjeta: tarjetaData.venta // Dólar tarjeta
-      };
-    } else {
-      alert("No se pudieron obtener las tasas de cambio.");
-      return null;
+        if (oficialData && tarjetaData && uyData) {
+          return {
+            ARS: oficialData.venta,
+            UYU: uyData[0].compra,
+            dolarTarjeta: tarjetaData.venta
+          };
+        } else {
+          alert("No se pudieron obtener las tasas de cambio.");
+          return null;
+        }
+      } catch (error) {
+        alert("Error al conectar con la API.");
+        console.error(error);
+        return null;
+      }
     }
-  } catch (error) {
-    alert("Error al conectar con la API.");
-    console.error(error);
-    return null;
-  }
-}
-  
-    // Función principal para manejar la conversión
+    
     async function convertCurrency() {
       const amount = parseFloat(document.getElementById("amount").value);
       const currency = document.getElementById("currency").value;
-  
+
       if (isNaN(amount) || amount <= 0) {
         alert("Por favor, ingresa un monto válido.");
         return;
       }
-  
+
       const rates = await getExchangeRates();
       if (!rates) return;
-  
-      const dolarMinorista = rates.ARS; // Dólar oficial
-      const dolarTarjeta = rates.dolarTarjeta; // Dólar tarjeta
-  
+
       let resultText = "";
+      let resultItems = [];
+      
       if (currency === "UYU") {
-        const ars = (amount * rates.ARS) / rates.UYU;
+        const ars = amount * rates.ARS / rates.UYU;
         const usd = amount / rates.UYU;
-        resultText = `${amount} UYU = ${ars.toFixed(2)} ARS, ${usd.toFixed(2)} USD`;
+        const dolarTarjeta = amount * rates.dolarTarjeta / rates.UYU;
+        resultItems.push(`Dolar Tarjeta: ${dolarTarjeta.toFixed(2)} ARS`);
+        resultItems.push(`ARS: ${ars.toFixed(2)}`);
+        resultItems.push(`USD: ${usd.toFixed(2)}`);
       } else if (currency === "ARS") {
-        const uyu = (amount * rates.UYU) / rates.ARS;
+        const uyu = amount * rates.UYU / rates.ARS;
         const usd = amount / rates.ARS;
-        resultText = `${amount} ARS = ${uyu.toFixed(2)} UYU, ${usd.toFixed(2)} USD`;
+        const dolarTarjeta = amount * rates.dolarTarjeta / rates.ARS;
+        resultItems.push(`Dolar Tarjeta: ${dolarTarjeta.toFixed(2)} UYU`);
+        resultItems.push(`UYU: ${uyu.toFixed(2)}`);
+        resultItems.push(`USD: ${usd.toFixed(2)}`);
       } else if (currency === "USD") {
         const uyu = amount * rates.UYU;
         const ars = amount * rates.ARS;
-        const tarjeta = dolarTarjeta * amount;
-        resultText = `${amount} USD = ${uyu.toFixed(2)} UYU, ${ars.toFixed(2)} ARS, ${tarjeta.toFixed(2)} ARS (Dólar Tarjeta)`;
+        const dolarTarjeta = amount * rates.dolarTarjeta;
+        resultItems.push(`Dolar Tarjeta: ${dolarTarjeta.toFixed(2)} ARS`);
+        resultItems.push(`ARS: ${ars.toFixed(2)}`);
+        resultItems.push(`UYU: ${uyu.toFixed(2)}`);
       }
-  
-      document.getElementById("result").innerText = resultText;
+
+      document.getElementById("result").innerHTML = resultItems.map(item => `<div class="result-item">${item}</div>`).join('');
     }
-  
-    // Agregar evento al botón
+
     document.getElementById("convert").addEventListener("click", convertCurrency);
   </script>
-  
-</body>
-</html>
 </body>
 </html>
