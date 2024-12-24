@@ -22,23 +22,45 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       text-align: center;
       width: 300px;
+      display: fixed;
     }
     h1 {
       font-size: 20px;
       margin-bottom: 10px;
     }
-    select, input {
+    input, .custom-select {
       width: calc(100% - 20px);
       padding: 10px;
       margin-bottom: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-
+    .custom-select {
+      position: relative;
+      display: inline-block;
+      background-color: #fff;
+      cursor: pointer;
+    }
     select {
+      width: 100%;
+      padding: 5px;
+      border: none;
+      border-radius: 5px;
+      outline: none;
       -webkit-appearance: none;
       appearance: none;
-      padding: 20px;
+      background: none;
+      cursor: pointer;
+    }
+    .custom-select::after {
+      content: '▼';
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #333;
+      font-size: 12px;
     }
     button {
       width: 100%;
@@ -64,11 +86,13 @@
   <div class="container">
     <h1>Calculadora de Monedas</h1>
     <input type="number" id="amount" placeholder="Ingresa el monto" />
-    <select id="currency">
-      <option value="UYU">Peso Uruguayo (UYU)</option>
-      <option value="ARS">Peso Argentino (ARS)</option>
-      <option value="USD">Dólar (USD)</option>
-    </select>
+    <div class="custom-select">
+      <select id="currency">
+        <option value="UYU">Peso Uruguayo (UYU)</option>
+        <option value="ARS">Peso Argentino (ARS)</option>
+        <option value="USD">Dólar (USD)</option>
+      </select>
+    </div>
     <button id="convert">Convertir</button>
     <div class="result" id="result"></div>
   </div>
